@@ -3,7 +3,7 @@ package db_test
 import (
 	"appengine/aetest"
 	"appengine/datastore"
-	"github.com/drborges/datastore-model"
+	"github.com/bearchinc/datastore-model"
 	"github.com/drborges/goexpect"
 	"testing"
 	"time"

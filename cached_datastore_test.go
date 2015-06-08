@@ -1,12 +1,12 @@
 package db_test
 
 import (
+	"testing"
+	"github.com/bearchinc/datastore-model"
 	"appengine/aetest"
 	"appengine/datastore"
 	"appengine/memcache"
-	"github.com/drborges/datastore-model"
 	"github.com/drborges/goexpect"
-	"testing"
 )
 
 type MembershipCard struct {

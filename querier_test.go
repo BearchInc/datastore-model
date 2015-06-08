@@ -1,7 +1,7 @@
 package db_test
 
 import (
-	"github.com/drborges/datastore-model"
+	"github.com/bearchinc/datastore-model"
 	"github.com/drborges/goexpect"
 	"testing"
 )
