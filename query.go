@@ -18,3 +18,8 @@ func (this *Query) Filter(filter string, value interface{}) *Query {
 	this.Query = this.Query.Filter(filter, value)
 	return this
 }
+
+func (this *Query) Limit(limit int) *Query {
+	this.Query = this.Query.Limit(limit)
+	return this
+}

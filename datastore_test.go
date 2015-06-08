@@ -253,6 +253,31 @@ func TestQueryAllSetKeysToMatchedItems(t *testing.T) {
 	expect(cards[1].Key()).ToDeepEqual(card2.Key())
 }
 
+func TestQuery(t *testing.T) {
+	t.Parallel()
+	c, _ := aetest.NewContext(nil)
+	defer c.Close()
+
+	card1 := &CreditCard{Number:1, Owner:"Borges"}
+	card2 := &CreditCard{Number:2, Owner:"Borges"}
+	card3 := &CreditCard{Number:3, Owner:"Diego"}
+
+	d := db.NewDatastore(c)
+	d.CreateAll(card1, card2, card3)
+
+	// Gives datastore some time to index the cards before querying
+	time.Sleep(1 * time.Second)
+
+	cards := CreditCards{}
+	err := d.Query(cards.ByOwner("Borges").Limit(1)).All(&cards)
+
+	expect := goexpect.New(t)
+	expect(err).ToBe(nil)
+	expect(len(cards)).ToBe(1)
+	expect(cards[0].Key()).ToDeepEqual(card1.Key())
+
+}
+
 func TestQueryFirstSetKeysToMatchedItem(t *testing.T) {
 	t.Parallel()
 	c, _ := aetest.NewContext(nil)
