@@ -13,7 +13,7 @@ import (
 type Model struct {
 	key       *datastore.Key `json:"-" datastore:"-"`
 	parentKey *datastore.Key `json:"-" datastore:"-"`
-	CreatedAt time.Time      `json:"-" datastore:",noindex"`
+	CreatedAt time.Time      `json:"created_at" datastore:",noindex"`
 }
 
 // HasKey returns true in case the
