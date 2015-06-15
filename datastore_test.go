@@ -300,3 +300,19 @@ func TestQueryFirstSetKeysToMatchedItem(t *testing.T) {
 	expect(err).ToBe(nil)
 	expect(card.Key()).ToDeepEqual(card1.Key())
 }
+
+func TestDatastoreResolveAllKeys(t *testing.T) {
+	t.Parallel()
+	c, _ := aetest.NewContext(nil)
+	defer c.Close()
+
+	card1 := &CreditCard{Number: 123}
+	card2 := &CreditCard{Number: 1234}
+
+	err := db.NewDatastore(c).ResolveAllKeys([]*CreditCard{card1, card2})
+
+	expect := goexpect.New(t)
+	expect(err).ToBe(nil)
+	expect(card1.Key().String()).ToBe("/CreditCard,123")
+	expect(card2.Key().String()).ToBe("/CreditCard,1234")
+}

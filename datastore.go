@@ -4,6 +4,7 @@ import (
 	"appengine"
 	"appengine/datastore"
 	"time"
+	"reflect"
 )
 
 type Clock func() time.Time
@@ -182,4 +183,20 @@ func (this Datastore) ResolveKey(e Entity) (*Metadata, error) {
 	}
 
 	return metadata, nil
+}
+
+func (this Datastore) ResolveAllKeys(slice interface{}) error {
+	s := reflect.ValueOf(slice)
+
+	if s.Kind() != reflect.Slice {
+		return datastore.ErrInvalidEntityType
+	}
+
+	for i := 0; i < s.Len(); i++ {
+		e := s.Index(i).Interface().(Entity)
+		if _, err := this.ResolveKey(e); err != nil {
+			return err
+		}
+	}
+	return nil
 }
