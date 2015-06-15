@@ -23,3 +23,8 @@ func (this *Query) Limit(limit int) *Query {
 	this.Query = this.Query.Limit(limit)
 	return this
 }
+
+func (this *Query) Project(fieldNames ...string) *Query {
+	this.Query = this.Query.Project(fieldNames...)
+	return this
+}
