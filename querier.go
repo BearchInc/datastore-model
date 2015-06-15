@@ -3,6 +3,7 @@ package db
 import (
 	"appengine"
 	"reflect"
+	"appengine/datastore"
 )
 
 // Querier provides hight level query operations
@@ -22,14 +23,16 @@ type Querier struct {
 // themselves dictate this limitation
 func (this Querier) All(slice interface{}) error {
 	keys, err := this.q.GetAll(this.c, slice)
+	_, errFieldMismatch := err.(*datastore.ErrFieldMismatch)
 
-	if err != nil {
+	if err != nil && !errFieldMismatch {
 		return err
 	}
 
 	for i, key := range keys {
 		EntityAt(slice, i).SetKey(key)
 	}
+
 
 	return nil
 }
