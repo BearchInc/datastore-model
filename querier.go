@@ -38,7 +38,7 @@ func (this Querier) All(slice interface{}) error {
 }
 
 // Count entities for query
-func (this Querier) Count(e Entity) (int, error) {
+func (this Querier) Count() (int, error) {
     return this.q.Count(this.c)
 }
 

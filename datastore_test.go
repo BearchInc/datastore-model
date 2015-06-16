@@ -332,8 +332,7 @@ func TestDatastoreCount(t *testing.T) {
     // Gives datastore some time to index the cards before querying
     time.Sleep(1 * time.Second)
 
-    card := CreditCard{}
-    count, err := d.Query(CreditCards{}.ByOwner("Borges")).Count(&card)
+    count, err := d.Query(CreditCards{}.ByOwner("Borges")).Count()
 
     expect := goexpect.New(t)
     expect(err).ToBe(nil)
