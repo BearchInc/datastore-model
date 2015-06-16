@@ -316,3 +316,26 @@ func TestDatastoreResolveAllKeys(t *testing.T) {
 	expect(card1.Key().String()).ToBe("/CreditCard,123")
 	expect(card2.Key().String()).ToBe("/CreditCard,1234")
 }
+
+func TestDatastoreCount(t *testing.T) {
+    t.Parallel()
+    c, _ := aetest.NewContext(nil)
+    defer c.Close()
+
+    card1 := &CreditCard{Number: 1, Owner: "Borges"}
+    card2 := &CreditCard{Number: 2, Owner: "Borges"}
+    card3 := &CreditCard{Number: 3, Owner: "Diego"}
+
+    d := db.NewDatastore(c)
+    d.CreateAll(card1, card2, card3)
+
+    // Gives datastore some time to index the cards before querying
+    time.Sleep(1 * time.Second)
+
+    card := CreditCard{}
+    count, err := d.Query(CreditCards{}.ByOwner("Borges")).Count(&card)
+
+    expect := goexpect.New(t)
+    expect(err).ToBe(nil)
+    expect(count).ToBe(2)
+}

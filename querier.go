@@ -37,6 +37,11 @@ func (this Querier) All(slice interface{}) error {
 	return nil
 }
 
+// Count entities for query
+func (this Querier) Count(e Entity) (int, error) {
+    return this.q.Count(this.c)
+}
+
 // First loads the first matched item into the
 // given entity
 //
