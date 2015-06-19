@@ -45,3 +45,13 @@ func (this *Query) Project(fieldNames ...string) *Query {
 	this.Query = this.Query.Project(fieldNames...)
 	return this
 }
+
+func (this *Query) Ancestor(ancestor *datastore.Key) *Query {
+	if ancestor == nil {
+		panic("datastore: nil query ancestor")
+		return nil
+	}
+	this.Query = this.Query.Ancestor(ancestor)
+
+	return this
+}
