@@ -253,6 +253,37 @@ func TestQueryAllSetKeysToMatchedItems(t *testing.T) {
 	expect(cards[1].Key()).ToDeepEqual(card2.Key())
 }
 
+func TestQueryExcludesSoftDeletedEntities(t *testing.T) {
+	t.Parallel()
+	c, _ := aetest.NewContext(nil)
+	defer c.Close()
+
+	type Post struct {
+		db.SoftDeletableModel
+		Description string
+	}
+
+	post1 := &Post{Description: "A soft deleted post"}
+	post1.Deleted = true
+
+	post2 := &Post{Description: "A non soft deleted post"}
+
+	d := db.NewDatastore(c)
+	d.CreateAll(post1, post2)
+
+	// Gives datastore some time to index the cards before querying
+	time.Sleep(1 * time.Second)
+
+	posts := []*Post{}
+	byNonDeletedPosts := db.From(&Post{})
+	err := d.Query(byNonDeletedPosts).All(&posts)
+
+	expect := goexpect.New(t)
+	expect(err).ToBe(nil)
+	expect(len(posts)).ToBe(1)
+	expect(posts[0].Key()).ToDeepEqual(post2.Key())
+}
+
 func TestQuery(t *testing.T) {
 	t.Parallel()
 	c, _ := aetest.NewContext(nil)
@@ -301,6 +332,36 @@ func TestQueryFirstSetKeysToMatchedItem(t *testing.T) {
 	expect(card.Key()).ToDeepEqual(card1.Key())
 }
 
+func TestQuerierFirstLoadsOnlyNonSoftDeleted(t *testing.T) {
+	t.Parallel()
+	c, _ := aetest.NewContext(nil)
+	defer c.Close()
+
+	type Post struct {
+		db.SoftDeletableModel
+		Description string
+	}
+
+	post1 := &Post{Description: "A soft deleted post"}
+	post1.Deleted = true
+
+	post2 := &Post{Description: "A non soft deleted post"}
+
+	d := db.NewDatastore(c)
+	d.CreateAll(post2, post1)
+
+	// Gives datastore some time to index the cards before querying
+	time.Sleep(1 * time.Second)
+
+	post := &Post{}
+	byNonDeletedPosts := db.From(&Post{})
+	err := d.Query(byNonDeletedPosts).First(post)
+
+	expect := goexpect.New(t)
+	expect(err).ToBe(nil)
+	expect(post.Description).ToDeepEqual(post2.Description)
+}
+
 func TestDatastoreResolveAllKeys(t *testing.T) {
 	t.Parallel()
 	c, _ := aetest.NewContext(nil)
@@ -322,17 +383,25 @@ func TestDatastoreCount(t *testing.T) {
     c, _ := aetest.NewContext(nil)
     defer c.Close()
 
-    card1 := &CreditCard{Number: 1, Owner: "Borges"}
-    card2 := &CreditCard{Number: 2, Owner: "Borges"}
-    card3 := &CreditCard{Number: 3, Owner: "Diego"}
+	type Post struct {
+		db.SoftDeletableModel
+		Description string
+	}
+
+	post1 := &Post{Description: "A soft deleted post"}
+	post1.Deleted = true
+
+	post2 := &Post{Description: "A non soft deleted post"}
+	post3 := &Post{Description: "Another non soft deleted post"}
 
     d := db.NewDatastore(c)
-    d.CreateAll(card1, card2, card3)
+    d.CreateAll(post1, post2, post3)
 
     // Gives datastore some time to index the cards before querying
     time.Sleep(1 * time.Second)
 
-    count, err := d.Query(CreditCards{}.ByOwner("Borges")).Count()
+	byNonDeletedPosts := db.From(&Post{})
+    count, err := d.Query(byNonDeletedPosts).Count()
 
     expect := goexpect.New(t)
     expect(err).ToBe(nil)

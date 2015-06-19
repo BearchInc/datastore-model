@@ -10,7 +10,7 @@ type KindExtractor struct {
 }
 
 func (this KindExtractor) Accept(f reflect.StructField) bool {
-	return f.Type.Name() == reflect.TypeOf(Model{}).Name()
+	return f.Type.Name() == reflect.TypeOf(Model{}).Name() || f.Type.Name() == reflect.TypeOf(SoftDeletableModel{}).Name()
 }
 
 func (this KindExtractor) Extract(e Entity, f reflect.StructField, v reflect.Value) error {

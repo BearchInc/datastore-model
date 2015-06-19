@@ -7,7 +7,14 @@ import (
 func From(e Entity) *Query {
 	metadata := &Metadata{}
 	MetadataExtractorChain{KindExtractor{metadata}}.ExtractFrom(e)
-	return &Query{datastore.NewQuery(metadata.Kind)}
+	q := &Query{datastore.NewQuery(metadata.Kind)}
+
+	// Filter out soft deleted items in case we are
+	// dealing with a model supporting soft deletes
+	if _, ok := e.(SoftDeletableEntity); ok {
+		q = q.Filter("Deleted=", false)
+	}
+	return q
 }
 
 type Query struct {

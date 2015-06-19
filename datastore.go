@@ -9,6 +9,10 @@ import (
 
 type Clock func() time.Time
 
+type SoftDeletableEntity interface {
+	IsDeleted() bool
+}
+
 type Entity interface {
 	HasKey() bool
 	Key() *datastore.Key

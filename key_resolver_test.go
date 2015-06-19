@@ -76,7 +76,7 @@ func TestKeyResolverResolveEntityWithIntId(t *testing.T) {
 	defer c.Close()
 
 	type CreditCard struct {
-		db.Model `db:"CreditCards"`
+		db.SoftDeletableModel `db:"CreditCards"`
 		Number   int `db:"id"`
 		Owner    string
 	}
