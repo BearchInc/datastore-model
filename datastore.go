@@ -10,6 +10,7 @@ import (
 type Clock func() time.Time
 
 type SoftDeletableEntity interface {
+	Entity
 	IsDeleted() bool
 }
 
