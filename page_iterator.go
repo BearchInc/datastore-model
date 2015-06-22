@@ -4,6 +4,7 @@ import (
 	"appengine"
 	"appengine/datastore"
 	"reflect"
+	"errors"
 )
 
 type PageIterator struct {
@@ -11,7 +12,7 @@ type PageIterator struct {
 	context            appengine.Context
 	nextCursor         datastore.Cursor
 	prevCursor         datastore.Cursor
-	doneProcessingPage bool
+	started    bool
 }
 
 func NewPagesIterator(q *datastore.Query, c appengine.Context) *PageIterator {
@@ -20,7 +21,6 @@ func NewPagesIterator(q *datastore.Query, c appengine.Context) *PageIterator {
 		context:            c,
 		nextCursor:         datastore.Cursor{},
 		prevCursor:         datastore.Cursor{},
-		doneProcessingPage: false,
 	}
 }
 
@@ -29,52 +29,61 @@ func NewPagesIterator(q *datastore.Query, c appengine.Context) *PageIterator {
 // to avoid messing up with the iterator internal state when using
 // LoadNext and LoadNextPage intermittently
 func (this *PageIterator) LoadNext(slice interface{}) error {
+	ErrInvalidEntityType := errors.New("Invalid entity type. Make sure your model implements appx.Entity (watch out for pointer receivers)")
+	ErrInvalidSliceType  := errors.New("Invalid slice type. Make sure you pass a pointer to a slice of appx.Entity")
+
 	sv := reflect.ValueOf(slice)
 	if sv.Kind() != reflect.Ptr || sv.IsNil() || sv.Elem().Kind() != reflect.Slice {
-		return datastore.ErrInvalidEntityType
+		return ErrInvalidSliceType
 	}
 	sv = sv.Elem()
 
 	elemType := sv.Type().Elem()
 	if elemType.Kind() != reflect.Ptr || elemType.Elem().Kind() != reflect.Struct {
-		return datastore.ErrInvalidEntityType
+		return ErrInvalidEntityType
 	}
 
+	this.started = true
 	iter := this.query.Run(this.context)
 	for {
 		dstValue := reflect.New(elemType.Elem())
 		dst := dstValue.Interface()
+
 		entity, ok := dst.(Entity)
 		if !ok {
-			return datastore.ErrInvalidEntityType
+			return ErrInvalidEntityType
 		}
 
 		key, err := iter.Next(entity)
-		this.prevCursor = this.nextCursor
-
-		cursor, cursorErr:= iter.Cursor()
-		if cursorErr != nil {
-			return cursorErr
-		}
-		this.nextCursor = cursor
-		entity.SetKey(key)
-		sv.Set(reflect.Append(sv, dstValue))
-
 		if err == datastore.Done {
-			this.doneProcessingPage = true
-			this.query = this.query.Start(cursor)
+			cursor, cursorErr := iter.Cursor()
+			if cursorErr != nil {
+				return cursorErr
+			}
+			this.prevCursor = this.nextCursor
+			this.nextCursor = cursor
+			this.query = this.query.Start(this.nextCursor)
+			if !this.HasNext() {
+				this.prevCursor = datastore.Cursor{}
+				this.nextCursor = datastore.Cursor{}
+				return datastore.Done
+			}
+			break
+		}
+
+		if err != nil {
 			return err
 		}
-		if err != nil {
-			return nil
-		}
+
+		entity.SetKey(key)
+		sv.Set(reflect.Append(sv, dstValue))
 	}
 
 	return nil
 }
 
 func (this *PageIterator) HasNext() bool {
-	return !this.doneProcessingPage || this.prevCursor != this.nextCursor
+	return !this.started || this.prevCursor.String() != this.nextCursor.String()
 }
 
 func (this *PageIterator) Cursor() string {
