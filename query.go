@@ -41,6 +41,11 @@ func (this *Query) Limit(limit int) *Query {
 	return this
 }
 
+func (this *Query) Order(fieldName string) *Query {
+    this.Query = this.Query.Order(fieldName)
+    return this
+}
+
 func (this *Query) Project(fieldNames ...string) *Query {
 	this.Query = this.Query.Project(fieldNames...)
 	return this
